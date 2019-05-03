@@ -15,9 +15,9 @@
 #define MAXW 10
 
 
-double w_arr[200];
-double Z_r_arr[200];
-double Z_i_arr[200];
+double w_arr[N/2];
+double Z_r_arr[N/2];
+double Z_i_arr[N/2];
 
 struct data
 {
@@ -108,7 +108,7 @@ int batteria(const gsl_vector * x, void *data,
         // Complex formato di gsl , parte im e real z = x+iy
         // x è double y è double
         // z complex
-        if(i<200){
+        if(i<N/2){
                 //printf("REAL");
         //double re = R0 + R1/(1+pow(C1,2)*pow(w,2)*(pow(R1,2)))+ R2/(1+pow(C2,2)*pow(w,2)*(pow(R2,2)));
             double re = creal(battery_impedance);
@@ -173,7 +173,7 @@ void leggiFile(double *dati, char* nomefile){
     fclose(fd);
 }
 
-void scriviFile(double *dati,char* nomefile){
+void write_files(double *dati,char* nomefile){
 
     FILE *fd;
     int res;
@@ -196,7 +196,7 @@ void scriviFile(double *dati,char* nomefile){
 }
 
 
-void setUpParametri(){
+void read_files(){
 
     int contatore;
     leggiFile(w_arr,"w_bat1.bin");
@@ -260,7 +260,7 @@ T = gsl_multifit_nlinear_trust;
      x = gsl_vector_view_array (x_init, p);
      wts = gsl_vector_view_array(weights, n);
     r = gsl_rng_alloc(gsl_rng_default);
-    setUpParametri();
+    read_files();
 
     /* define the function to be minimized */
     fdf.f = batteria;      //EQ DA CAMBIARE
@@ -367,7 +367,7 @@ void print_results(){
         double Aw = FIT(8);
 
         double dati[9] = {L,Rm,Q1,a1,Rp1,Q2,a2,Rp2,Aw};
-        scriviFile(dati,"res_bat1.dat");
+        write_files(dati,"res_bat1.dat");
 
         fprintf (stderr, "L      = %.15e +/- %.15e\n", L, c*ERR(0));
         fprintf (stderr, "Rm     = %.15e +/- %.15e\n", Rm, c*ERR(1));
