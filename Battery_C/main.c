@@ -18,6 +18,40 @@
 double w_arr[200];
 double Z_r_arr[200];
 double Z_i_arr[200];
+
+struct data
+{
+    size_t n;
+    double * t;
+    double * y;
+};
+
+double chisq, chisq0;
+    int status, info;
+    size_t i;
+
+    //Servono per il setup dell'algoritmo
+    const double xtol = 1e-8;
+    const double gtol = 1e-8;
+    const double ftol;
+    gsl_multifit_nlinear_type *T;
+    gsl_multifit_nlinear_workspace *w;
+    gsl_multifit_nlinear_fdf fdf;
+    gsl_multifit_nlinear_parameters fdf_params;
+    const size_t n = N;
+    const size_t p = 9;
+
+    gsl_vector *f;
+    gsl_matrix *J;
+    gsl_matrix *covar;
+    double t[N], y[N], weights[N];
+    struct data d;
+    double x_init[9] = { 5e-6,0.1,0.77,0.6,0.2,0.60,0.7,1,0.18};
+                                            /* starting values */
+    //double x_init[9] = { 4e-06,0.2,0.88,0.4,0.1,0.70,0.7,1,0.18};
+    gsl_vector_view x;
+    gsl_vector_view wts;
+    gsl_rng * r;
 //Bound da impostare con min,max
 //double L_bounds[2] = {3e-6,8e-6};
 //double Rm_bounds[2]={0,0.3};
@@ -30,17 +64,8 @@ double Z_i_arr[200];
 //double Aw_bounds[2] = {0,0.50};
 
 
-struct data
-{
-    size_t n;
-    double * t;
-    double * y;
-};
-int
 
-
-//Batteria
-batteria(const gsl_vector * x, void *data,
+int batteria(const gsl_vector * x, void *data,
          gsl_vector * f)
 {
     size_t n = ((struct data *)data)->n;
@@ -185,37 +210,8 @@ void setUpParametri(){
     //leggiFile(Z_r_arr,"real_modello6.bin");
     //leggiFile(Z_i_arr,"imag_modello6.bin");
     }
-int
-parab_df (const gsl_vector * x, void *data,
-          gsl_matrix * J)
-{
-    size_t n = ((struct data *)data)->n;
-    double *t = ((struct data *)data)->t;
 
-    //double a = gsl_vector_get (x, 0); //R0
-    //double b = gsl_vector_get (x, 1); //R1
-    //double c = gsl_vector_get (x, 2); //R2
-    //double d = gsl_vector_get (x, 3); // C1
-    //double e = gsl_vector_get (x, 4); //C2
-    //double f = gsl_vector_get (x, 1); //R1
-    //double g = gsl_vector_get (x, 2); //R2
-    //double h = gsl_vector_get (x, 3); // C1
-    //double l = gsl_vector_get (x, 4); //C2
-
-
-    size_t i;
-
-    for (i = 0; i < n; i++)
-    {
-        gsl_matrix_set (J, i, 0, pow(t[i],2));
-        gsl_matrix_set (J, i, 1, t[i]);
-        gsl_matrix_set (J, i, 2, 1.0);
-    }
-
-    return GSL_SUCCESS;
-}
-void
-callback(const size_t iter, void *params,
+void callback(const size_t iter, void *params,
          const gsl_multifit_nlinear_workspace *w)
 {
     gsl_vector *f = gsl_multifit_nlinear_residual(w);
@@ -241,41 +237,28 @@ callback(const size_t iter, void *params,
 }
 
 
-
-int main (void)
-{
+void identification(){
 
 
-    const gsl_multifit_nlinear_type *T = gsl_multifit_nlinear_trust;
-    gsl_multifit_nlinear_workspace *w;
-    gsl_multifit_nlinear_fdf fdf;
-    gsl_multifit_nlinear_parameters fdf_params =
-    gsl_multifit_nlinear_default_parameters();
-    const size_t n = N;
-    const size_t p = 9;
-
-    gsl_vector *f;
-    gsl_matrix *J;
-    gsl_matrix *covar = gsl_matrix_alloc (p, p);
-    double t[N], y[N], weights[N];
-    struct data d = { n, t, y };
-    double x_init[9] = { 5e-6,0.1,0.77,0.6,0.2,0.60,0.7,1,0.18};
-                                            /* starting values */
-    //double x_init[9] = { 4e-06,0.2,0.88,0.4,0.1,0.70,0.7,1,0.18};
-    gsl_vector_view x = gsl_vector_view_array (x_init, p);
-    gsl_vector_view wts = gsl_vector_view_array(weights, n);
-    gsl_rng * r;
-    double chisq, chisq0;
-    int status, info;
-    size_t i;
-
-    //Servono per il setup dell'algoritmo
-    const double xtol = 1e-8;
-    const double gtol = 1e-8;
-    const double ftol;
 
 
+
+    initialize_params();
+    acquire_data();
+    solve_system();
+    print_results();
+
+}
+void initialize_params(){
+T = gsl_multifit_nlinear_trust;
+    fdf_params = gsl_multifit_nlinear_default_parameters();
+    covar = gsl_matrix_alloc (p, p);
     gsl_rng_env_setup();
+    d.n=n;
+    d.t = t;
+    d.y=y;
+     x = gsl_vector_view_array (x_init, p);
+     wts = gsl_vector_view_array(weights, n);
     r = gsl_rng_alloc(gsl_rng_default);
     setUpParametri();
 
@@ -287,6 +270,8 @@ int main (void)
     fdf.p = p;
     fdf.params = &d;
 
+}
+void acquire_data(){
 
     /* this is the data to be fitted */
     for (i = 0; i < n; i++)
@@ -311,6 +296,10 @@ int main (void)
         printf ("data: %g %g\n", t[i], y[i]);
     };
 
+}
+
+void solve_system(){
+
     /* allocate workspace with default parameters */
     w = gsl_multifit_nlinear_alloc (T, &fdf_params, n, p);
 
@@ -331,6 +320,11 @@ int main (void)
 
     /* compute final cost */
     gsl_blas_ddot(f, f, &chisq);
+
+
+}
+
+void print_results(){
 
 #define FIT(i) gsl_vector_get(w->x, i)
 #define ERR(i) sqrt(gsl_matrix_get(covar,i,i))
@@ -388,10 +382,17 @@ int main (void)
 
     fprintf (stderr, "status = %s\n", gsl_strerror (status));
 
+
+}
+
+void close(){
     gsl_multifit_nlinear_free (w);
     gsl_matrix_free (covar);
     gsl_rng_free (r);
+}
 
-
+int main (void)
+{
+    identification();
     return 0;
 }
