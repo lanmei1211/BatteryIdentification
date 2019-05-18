@@ -1,5 +1,5 @@
 #include "main.h"
-
+#include "classifier.h"
 
 double w_arr[N/2];
 double Z_r_arr[N/2];
@@ -355,6 +355,7 @@ void close(){
 
 int main (void)
 {
-    identification();
+    test();
+    //identification();
     return 0;
 }
