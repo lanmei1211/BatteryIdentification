@@ -1,5 +1,7 @@
 #include "main.h"
 #include "classifier.h"
+#include "battery_equation.h"
+#include "global.h"
 
 double w_arr[N/2];
 double Z_r_arr[N/2];
@@ -19,132 +21,33 @@ gsl_matrix *covar;
 double t[N], y[N], weights[N];
 Data d;
 
-                                        /* starting values */
-//double x_init[9] = { 4e-06,0.2,0.88,0.4,0.1,0.70,0.7,1,0.18};
 gsl_vector_view x;
-gsl_vector_view wts;
 gsl_rng * r;
-//Bound da impostare con min,max
-//double L_bounds[2] = {3e-6,8e-6};
-//double Rm_bounds[2]={0,0.3};
-//double Q1_bounds[2]={0,0.80};
-//double a1_bounds[2]={0.5,1};
-//double Rp1_bounds[2]={0,1};
-//double Q2_bounds[2]={0,0.70};
-//double a2_bounds[2]={0.5,1};
-//double Rp2_bounds[2] = {0,1};
-//double Aw_bounds[2] = {0,0.50};
+
+int type;
+size_t p;
+double x_init[9];
+double lower_bounds[9];
+double upper_bounds[9];
 
 
-
-int batteria(const gsl_vector * x, void *data, gsl_vector * f)
-{
-    size_t n = ((struct data *)data)->n;
-    double *t = ((struct data *)data)->t;
-    double *y = ((struct data *)data)->y;
-
-    double L = gsl_vector_get (x, 0);
-    double Rm = gsl_vector_get (x, 1);
-    double Q1 = gsl_vector_get (x, 2);
-    double a1 = gsl_vector_get (x, 3);
-    double Rp1 = gsl_vector_get (x, 4);
-    double Q2 = gsl_vector_get (x, 5);
-    double a2 = gsl_vector_get (x, 6);
-    double Rp2 = gsl_vector_get (x, 7);
-    double Aw = gsl_vector_get (x, 8);
-
-    //Formula per applicare i bound
-//    L=L_bounds[0]+(L_bounds[1]-L_bounds[0])/(1+exp(-L));
-//    Rm=Rm_bounds[0]+(Rm_bounds[1]-Rm_bounds[0])/(1+exp(-Rm));
-//    Q1=Q1_bounds[0]+(Q1_bounds[1]-Q1_bounds[0])/(1+exp(-Q1));                    //e^-oo fa 0, e^oo fa infinito
-//    a1=a1_bounds[0]+(a1_bounds[1]-a1_bounds[0])/(1+exp(-a1));
-//    Rp1=Rp1_bounds[0]+(Rp1_bounds[1]-Rp1_bounds[0])/(1+exp(-Rp1));
-//    Q2=Q2_bounds[0]+(Q2_bounds[1]-Q2_bounds[0])/(1+exp(-Q2));
-//    a2=a2_bounds[0]+(a2_bounds[1]-a2_bounds[0])/(1+exp(-a2));
-//    Rp2=Rp2_bounds[0]+(Rp2_bounds[1]-Rp2_bounds[0])/(1+exp(-Rp2));
-//    Aw=Aw_bounds[0]+(Aw_bounds[1]-Aw_bounds[0])/(1+exp(-Aw));
-
-
-    size_t i;
-    //int temp = 0;
-    for (i = 0; i < n; i++)
-    {
-        double w = t[i];
-        double  Yi;
-        //vars: Rm, Rp, a, Q
-        //double complex battery_impedance = Rm + 1/(Q*cpow(w*I,a)+1/(Rp+Zw));
-        //double complex battery_impedance = L*w*I + Rm + 1/(Q1*cpow(w*I,a1)+1/(Rp1)) +1/(Q2*cpow(w*I,a2)+1/(Rp2)) + (Aw/sqrt(w))*(1-I) ;
-        double complex battery_impedance = L*I*w + Rm + 1/( 1/(1/(Q1*cpow(I*w,a1))) + 1/Rp1 ) +  1/( 1/(1/(Q2*cpow(I*w,a2))) + 1/Rp2 ) + (Aw*(1 - I))/sqrt(w);
-
-        // Complex formato di gsl , parte im e real z = x+iy
-        // x è double y è double
-        // z complex
-        if(i<N/2){
-                //printf("REAL");
-        //double re = R0 + R1/(1+pow(C1,2)*pow(w,2)*(pow(R1,2)))+ R2/(1+pow(C2,2)*pow(w,2)*(pow(R2,2)));
-            double re = creal(battery_impedance);
-            Yi = re;
-        }else{
-            //printf("IMG");
-        //double im = -(pow(R1,2)*w*C1)/(1+pow(C1,2)*pow(w,2)*pow(R1,2)) - (pow(R2,2)*w*C2)/(1+pow(C2,2)*pow(w,2)*(pow(R2,2)));
-            //temp = 1;
-            double im = cimag(battery_impedance);
-            Yi = im;
-        }
-        double weight = 1;
-        if(a1>1 || a1<0.4){
-            weight = MAXW;
-        }
-         if(a2>1 || a2<0.4){
-            weight = MAXW;
-        }
-
-        if(Rm<0 || Rm>0.3){
-            weight = MAXW;
-        }
-
-        if(Rp1<0 || Rp1 >1){
-            weight = MAXW;
-        }
-        if(Rp2<0 || Rp2 > 2){
-            weight = MAXW;
-        }
-
-        if(L < 1e-6 || L>8e-6){
-            weight = MAXW;
-        }
-
-        if(Q1<0 || Q1 > 0.8){
-             weight = MAXW;
-        }
-        if(Q2<0 || Q2 > 0.8){
-             weight = MAXW;
-        }
-        if(Aw<0.01 || Aw > 0.5){
-             weight = MAXW;
-        }
-        gsl_vector_set (f, i,weight*(Yi - y[i]));
-}
-    return GSL_SUCCESS;
-}
 void leggiFile(double *dati, char* nomefile){
     //Funzione che legge da file binario dei dati e li inserisce nel vettore passato come argomento
     FILE *fd;
-    //double pulsazioni[100];
+
     int res;
 
-    //fd=fopen("wZdot01.dat", "rb");
     fd=fopen(nomefile, "rb");
     if( fd ==NULL ) {
         perror("Errore in apertura del file");
         exit(1);
     }
 
-    res = fread(dati, sizeof(double), 200, fd);
+    res = fread(dati, sizeof(double), N/2, fd);
     fclose(fd);
 }
 
-void write_files(double *dati,char* nomefile){
+void write_files(double *dati,char* nomefile,int n){
 
     FILE *fd;
     int res;
@@ -156,12 +59,11 @@ void write_files(double *dati,char* nomefile){
     }
 
 
-    for(k = 0;k<9;k++){
+    for(k = 0;k<n;k++){
             fprintf(fd,"%.15e ",dati[k]);
         }
 
-    //res = fwrite(dati,sizeof(double),9,fd);
-    //fprintf(fd,dati[0]);
+
     fclose(fd);
 
 }
@@ -171,16 +73,13 @@ void read_files(){
 
     int contatore;
     leggiFile(w_arr,"w_bat1.bin");
-    //leggiFile(w_arr,"w_modello6.bin");
-    for(contatore = 0; contatore < 200; contatore++){
+    for(contatore = 0; contatore < N/2; contatore++){
         //precisione matlab
         printf("%d: %.15e \n",contatore,w_arr[contatore]);
     }
     leggiFile(Z_r_arr,"real_bat1.bin");
     leggiFile(Z_i_arr,"imag_bat1.bin");
-    //leggiFile(Z_r_arr,"real_modello6.bin");
-    //leggiFile(Z_i_arr,"imag_modello6.bin");
-    }
+}
 
 void callback(const size_t iter, void *params, const gsl_multifit_nlinear_workspace *w)
 {
@@ -191,6 +90,7 @@ void callback(const size_t iter, void *params, const gsl_multifit_nlinear_worksp
     /* compute reciprocal condition number of J(x) */
     gsl_multifit_nlinear_rcond(&rcond, w);
 
+    /*
     fprintf(stderr, "iter %2zu: L = %.e, Rm = %.e, Q1 = %.e, a1 = %.e, Rp1 = %.e, Q2 = %.e,a2 = %.e, Rp2 = %.e, Aw = %.e, cond(J) = %8.4f, |f(x)| = %.4f\n",
             iter,
             gsl_vector_get(x, 0),
@@ -204,24 +104,28 @@ void callback(const size_t iter, void *params, const gsl_multifit_nlinear_worksp
             gsl_vector_get(x, 8),
             1.0 / rcond,
             gsl_blas_dnrm2(f));
+    */
 }
 
 
 void identification(){
 
-
-
-
-
-    initialize_params();
+    printf("Acquire data\n\n");
     acquire_data();
+    printf("Classify\n\n");
+    classify();
+    printf("Initialize Params\n\n");
+    initialize_params();
+    printf("Solve System\n\n");
     solve_system();
+    printf("Print results\n\n");
     print_results();
+    printf("Close\n\n");
     close();
 
 }
 void initialize_params(){
-T = gsl_multifit_nlinear_trust;
+    T = gsl_multifit_nlinear_trust;
     fdf_params = gsl_multifit_nlinear_default_parameters();
     covar = gsl_matrix_alloc (p, p);
     gsl_rng_env_setup();
@@ -229,12 +133,11 @@ T = gsl_multifit_nlinear_trust;
     d.t = t;
     d.y=y;
     x = gsl_vector_view_array (x_init, p);
-    wts = gsl_vector_view_array(weights, N);
     r = gsl_rng_alloc(gsl_rng_default);
-    read_files();
+
 
     /* define the function to be minimized */
-    fdf.f = batteria;      //EQ DA CAMBIARE
+    fdf.f = batteria;
     fdf.df = NULL;   /* set to NULL for finite-difference Jacobian */
     fdf.fvv = NULL;     /* not using geodesic acceleration */
     fdf.n = N;
@@ -243,39 +146,116 @@ T = gsl_multifit_nlinear_trust;
 
 }
 void acquire_data(){
-
+    read_files();
     /* this is the data to be fitted */
     for (i = 0; i < N; i++)
     {
 
-        if(i<200){
+        if(i<N/2){
            t[i] = w_arr[i];
            y[i] = Z_r_arr[i];
 
 
         } else {
-           t[i] = w_arr[i-200];
-           y[i] = Z_i_arr[i-200];
+           t[i] = w_arr[i-N/2];
+           y[i] = Z_i_arr[i-N/2];
 
         }
 
-        //double si = 0.1 * y[i];
-        //weights[i] = 1.0 / (si * si);
 
-        //DA GUARDARE per il nuovo controllo
-        weights[i] = 1.0;
         printf ("data: %g %g\n", t[i], y[i]);
     };
 
 }
+
+void classify(){
+    type = classificatore(Z_i_arr,N/2);
+    printf("Type is: %d\n", type);
+    if (type == 1){
+        p=4;
+
+        x_init[0] = 0.1;
+        x_init[1] = 0.77;
+        x_init[2] = 0.6;
+        x_init[3] = 0.2;
+
+        lower_bounds[0] = 0.05;
+        lower_bounds[1] = 0.74;
+        lower_bounds[2] = 0.48;
+        lower_bounds[3] = 0.08;
+
+        upper_bounds[0] = 0.15;
+        upper_bounds[1] = 0.80;
+        upper_bounds[2] = 0.72;
+        upper_bounds[3] = 0.24;
+
+    } else if (type == 2){
+        p=5;
+
+        x_init[0] = 0.15;
+        x_init[1] = 1;
+        x_init[2] = 0.2;
+        x_init[3] = 5;
+        x_init[4] = 1;
+
+        lower_bounds[0] = 0.1;
+        lower_bounds[1] = 1;
+        lower_bounds[2] = 0.2;
+        lower_bounds[3] = 5;
+        lower_bounds[4] = 1;
+
+
+        upper_bounds[0] = 0.2;
+        upper_bounds[1] = 1.2;
+        upper_bounds[2] = 0.24;
+        upper_bounds[3] = 5.1;
+        upper_bounds[4] = 1.1;
+
+
+    } else {
+        p=9;
+
+        x_init[0] = 3e-6;
+        x_init[1] = 0.1;
+        x_init[2] = 0.77;
+        x_init[3] = 0.6;
+        x_init[4] = 0.2;
+        x_init[5] = 0.6;
+        x_init[6] = 0.7;
+        x_init[7] = 0.1;
+        x_init[8] = 0.18;
+
+        lower_bounds[0] = 2e-6;
+        lower_bounds[1] = 0.0;
+        lower_bounds[2] = 0.0;
+        lower_bounds[3] = 0.5;
+        lower_bounds[4] = 0.0;
+        lower_bounds[5] = 0.0;
+        lower_bounds[6] = 0.5;
+        lower_bounds[7] = 0.0;
+        lower_bounds[8] = 0.0;
+
+        upper_bounds[0] = 8e-6;
+        upper_bounds[1] = 0.3;
+        upper_bounds[2] = 0.8;
+        upper_bounds[3] = 1;
+        upper_bounds[4] = 1;
+        upper_bounds[5] = 0.7;
+        upper_bounds[6] = 1;
+        upper_bounds[7] = 1;
+        upper_bounds[8] = 0.5;
+    }
+
+}
+
 
 void solve_system(){
 
     /* allocate workspace with default parameters */
     w = gsl_multifit_nlinear_alloc (T, &fdf_params, N, p);
 
-    /* initialize solver with starting point and weights */
-    gsl_multifit_nlinear_winit (&x.vector, &wts.vector, &fdf, w);
+    /* initialize solver with starting point */
+    gsl_multifit_nlinear_init (&x.vector, &fdf, w);
 
     /* compute initial cost function */
     f = gsl_multifit_nlinear_residual(w);
@@ -318,28 +298,32 @@ void print_results(){
 
         fprintf(stderr, "chisq/dof = %g\n", chisq / dof);
 
-        double L = FIT(0);
-        double Rm = FIT(1);
-        double Q1 = FIT(2);
-        double a1 = FIT(3);
-        double Rp1 = FIT(4);
-        double Q2 = FIT(5);
-        double a2 = FIT(6);
-        double Rp2 = FIT(7);
-        double Aw = FIT(8);
+        if (type==1){
+            double dati[4] = {FIT(0),FIT(1),FIT(2),FIT(3)};
+            write_files(dati,"res_bat1.dat",p);
+        }else if(type==2){
+            double dati[5] = {FIT(0),FIT(1),FIT(2),FIT(3),FIT(4)};
+            write_files(dati,"res_bat1.dat",p);
+        } else {
+            double dati[9] = {FIT(0),FIT(1),FIT(2),FIT(3),FIT(4),FIT(5),FIT(6),FIT(7),FIT(8)};
+            write_files(dati,"res_bat1.dat",p);
+        }
 
-        double dati[9] = {L,Rm,Q1,a1,Rp1,Q2,a2,Rp2,Aw};
-        write_files(dati,"res_bat1.dat");
 
-        fprintf (stderr, "L      = %.15e +/- %.15e\n", L, c*ERR(0));
-        fprintf (stderr, "Rm     = %.15e +/- %.15e\n", Rm, c*ERR(1));
-        fprintf (stderr, "Q1      = %.15e +/- %.15e\n", Q1, c*ERR(2));
-        fprintf (stderr, "a1      = %.15e +/- %.15e\n", a1, c*ERR(3));
-        fprintf (stderr, "Rp1     = %.15e +/- %.15e\n", Rp1, c*ERR(4));
-        fprintf (stderr, "Q2     = %.15e +/- %.15e\n", Q2, c*ERR(5));
-        fprintf (stderr, "a2      = %.15e +/- %.15e\n", a2, c*ERR(6));
-        fprintf (stderr, "Rp2      = %.15e +/- %.15e\n", Rp2, c*ERR(7));
-        fprintf (stderr, "Aw      = %.15e +/- %.15e\n", Aw, c*ERR(8));
+
+        fprintf (stderr, "Param 1      = %.15e \n", FIT(0));
+        fprintf (stderr, "Param 2     = %.15e \n", FIT(1));
+        fprintf (stderr, "Param 3      = %.15e \n", FIT(2));
+        fprintf (stderr, "Param 4      = %.15e \n", FIT(3));
+        if(type!=1){
+            fprintf (stderr, "Param 5     = %.15e \n", FIT(4));
+            if(type==3){
+                fprintf (stderr, "Param 6     = %.15e \n", FIT(5));
+                fprintf (stderr, "Param 7      = %.15e \n", FIT(6));
+                fprintf (stderr, "Param 8      = %.15e \n", FIT(7));
+                fprintf (stderr, "Param 9      = %.15e  \n", FIT(8));
+            }
+        }
     }
 
     fprintf (stderr, "status = %s\n", gsl_strerror (status));
@@ -355,7 +339,7 @@ void close(){
 
 int main (void)
 {
-    test();
-    //identification();
+    //test();
+    identification();
     return 0;
 }
