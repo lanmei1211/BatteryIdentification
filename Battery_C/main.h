@@ -19,9 +19,6 @@ const double gtol = 1e-8;
 const double ftol = 0.0;
 
 
-
-
-
 void leggiFile(double*, char* );
 void write_files(double *,char* ,int n);
 void read_files();

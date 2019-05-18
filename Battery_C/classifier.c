@@ -19,7 +19,7 @@ double vettore2[tests][size] = {
     {5, 4, 3, 2, 1, 0},
     {0, 1, 2, 3, 2, 1},
     {3, 2, 1, 0, 1, 2},
-    {0, 1, 2, 1, 0, 1}, //attenzione a compute qui!!! le gobbe contano come 2 o 1 se alla fine la seconda sta selendo?
+    {0, 1, 2, 1, 0, 1},
     {0, 1, 2, 1, 2, 1},
     {5, 4, 5, 4, 3, 2},
     {1, 2, 1, 2, 1, 0}
@@ -108,10 +108,13 @@ int compute(double *data, int n){
     // 0 = 1 gobba, 1 = 2 gobbe
 
     int i_cresc = is_increasing(data,n);
+    printf("i_cresc: %d\n", i_cresc);
     if(i_cresc!=0){
         int i_decr = is_decreasing(data+i_cresc,n-i_cresc);
+        printf("i_decr: %d\n", i_decr);
         if(i_decr!=0){
             int i_cresc2 = is_increasing(data+i_cresc+i_decr,n-i_cresc-i_decr);
+            printf("i_cresc2: %d\n", i_cresc2);
             if(i_cresc2!=0){
                 return 1;
             }
@@ -121,8 +124,9 @@ int compute(double *data, int n){
 }
 
 int classificatore(double *data, int n){
-    int h = 1;
-    int k = 1;
+    printf("-- debug classificatore --\n");
+    int h = 0;
+    int k = 0;
     int esito1 = 1;
     double m_array[n];
     while(esito1==1 && k+4<n){
@@ -133,17 +137,17 @@ int classificatore(double *data, int n){
         h++;
         k++;
     }
-    int esito = compute(m_array,n);
+    int esito = compute(m_array,h);
     int j = 1;
     int esito2 = 1;
-
+    printf("h: %d, esito: %d\n", h,esito);
     while(esito2==1 && k+j<n){
         if(data[k+j-1]<data[k+j])
             esito2=0;
         j++;
     }
-
-    if(j+k<n && j>1){
+    printf("J = %d, n = %d\n",j,n);
+    if((j+k)==(n-1) && j>1){
         if (esito==1){
             return 2;
         } else {
