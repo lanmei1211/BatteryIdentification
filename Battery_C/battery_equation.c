@@ -60,4 +60,5 @@ double complex R_RC_RC(double w, double Rs,double C1,double Rp1,double C2,double
 
 double complex CPE_W(double w, double L, double Rs, double Q1, double n1, double Rp1, double Q2, double n2, double Rp2, double Aw){
     return L*I*w + Rs + 1/( 1/(1/(Q1*cpow(I*w,n1))) + 1/Rp1 ) +  1/( 1/(1/(Q2*cpow(I*w,n2))) + 1/Rp2 ) + (Aw*(1 - I))/sqrt(w);
+
 }

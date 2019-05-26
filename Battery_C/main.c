@@ -216,14 +216,14 @@ void classify(){
         p=9;
 
         x_init[0] = 3e-6;
-        x_init[1] = 0.1;
-        x_init[2] = 0.77;
+        x_init[1] = 0.2;
+        x_init[2] = 0.04;
         x_init[3] = 0.6;
-        x_init[4] = 0.2;
+        x_init[4] = 0.4;
         x_init[5] = 0.6;
-        x_init[6] = 0.7;
-        x_init[7] = 0.1;
-        x_init[8] = 0.18;
+        x_init[6] = 0.8;
+        x_init[7] = 0.7;
+        x_init[8] = 0.22;
 
         lower_bounds[0] = 2e-6;
         lower_bounds[1] = 0.0;
@@ -238,11 +238,11 @@ void classify(){
         upper_bounds[0] = 8e-6;
         upper_bounds[1] = 0.3;
         upper_bounds[2] = 0.8;
-        upper_bounds[3] = 1;
-        upper_bounds[4] = 1;
+        upper_bounds[3] = 1.0;
+        upper_bounds[4] = 1.0;
         upper_bounds[5] = 0.7;
-        upper_bounds[6] = 1;
-        upper_bounds[7] = 1;
+        upper_bounds[6] = 1.0;
+        upper_bounds[7] = 1.0;
         upper_bounds[8] = 0.5;
     }
 
