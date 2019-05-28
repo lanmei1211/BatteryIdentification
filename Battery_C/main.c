@@ -63,7 +63,8 @@ void write_files(double *dati,char* nomefile,int n){
 
 
     for(k = 0;k<n;k++){
-            fprintf(fd,"%.15e ",dati[k]);
+            //fprintf(fd,"%.15e ",dati[k]);
+            fwrite(&dati[k],sizeof(double),1,fd);
         }
 
 
@@ -381,7 +382,7 @@ int main (int argc, char **argv)
     if(argc ==2){
         fuel_cell=1;
     }
-    //test_filter();
+    //test_write();
     identification();
     return 0;
 }
