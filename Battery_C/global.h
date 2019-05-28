@@ -1,6 +1,12 @@
 #ifndef GLOBAL_H_INCLUDED
 #define GLOBAL_H_INCLUDED
 
+#include <stdio.h>
+#include <stdlib.h>
+#define WINDOW 2
+#define FILTER_AMOUNT 6
+#define OFFSET 50
+
 #define N 400
 typedef struct data
 {

@@ -2,6 +2,7 @@
 #include "classifier.h"
 #include "battery_equation.h"
 #include "global.h"
+#include "filter.h"
 
 double w_arr[N/2];
 double Z_r_arr[N/2];
@@ -29,6 +30,8 @@ size_t p;
 double x_init[9];
 double lower_bounds[9];
 double upper_bounds[9];
+
+int fuel_cell = 0;
 
 
 void leggiFile(double *dati, char* nomefile){
@@ -169,7 +172,13 @@ void acquire_data(){
 }
 
 void classify(){
-    type = classificatore(Z_i_arr,N/2);
+    if(fuel_cell == 0){
+        double filtered_data[N/2];
+        filter(Z_i_arr,filtered_data,N/2);
+        type = classificatore(filtered_data+OFFSET,N/2-OFFSET);
+    } else {
+        type = 4;
+    }
     printf("Type is: %d\n", type);
     if (type == 1){
         p=4;
@@ -212,7 +221,7 @@ void classify(){
         upper_bounds[4] = 1.1;
 
 
-    } else {
+    } else if (type == 3){
         p=9;
 
         x_init[0] = 3e-6;
@@ -244,6 +253,30 @@ void classify(){
         upper_bounds[6] = 1.0;
         upper_bounds[7] = 1.0;
         upper_bounds[8] = 0.5;
+    } else {
+        p=9;
+
+        x_init[0] = 3e-6;
+        x_init[1] = 0.2;
+        x_init[2] = 0.04;
+        x_init[3] = 0.6;
+        x_init[4] = 0.4;
+        x_init[5] = 0.6;
+
+        lower_bounds[0] = 2e-6;
+        lower_bounds[1] = 0.0;
+        lower_bounds[2] = 0.0;
+        lower_bounds[3] = 0.5;
+        lower_bounds[4] = 0.0;
+        lower_bounds[5] = 0.0;
+
+        upper_bounds[0] = 8e-6;
+        upper_bounds[1] = 0.3;
+        upper_bounds[2] = 0.8;
+        upper_bounds[3] = 1.0;
+        upper_bounds[4] = 1.0;
+        upper_bounds[5] = 0.7;
+
     }
 
 }
@@ -304,8 +337,11 @@ void print_results(){
         }else if(type==2){
             double dati[5] = {FIT(0),FIT(1),FIT(2),FIT(3),FIT(4)};
             write_files(dati,"res_bat1.dat",p);
-        } else {
+        } else if(type == 3){
             double dati[9] = {FIT(0),FIT(1),FIT(2),FIT(3),FIT(4),FIT(5),FIT(6),FIT(7),FIT(8)};
+            write_files(dati,"res_bat1.dat",p);
+        } else {
+            double dati[6] = {FIT(0),FIT(1),FIT(2),FIT(3),FIT(4),FIT(5)};
             write_files(dati,"res_bat1.dat",p);
         }
 
@@ -317,6 +353,9 @@ void print_results(){
         fprintf (stderr, "Param 4      = %.15e \n", FIT(3));
         if(type!=1){
             fprintf (stderr, "Param 5     = %.15e \n", FIT(4));
+            if(type==4){
+                fprintf (stderr, "Param 6     = %.15e \n", FIT(5));
+            }
             if(type==3){
                 fprintf (stderr, "Param 6     = %.15e \n", FIT(5));
                 fprintf (stderr, "Param 7      = %.15e \n", FIT(6));
@@ -337,9 +376,12 @@ void close(){
     gsl_rng_free (r);
 }
 
-int main (void)
+int main (int argc, char **argv)
 {
-    //test();
+    if(argc ==2){
+        fuel_cell=1;
+    }
+    //test_filter();
     identification();
     return 0;
 }

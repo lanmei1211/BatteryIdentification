@@ -11,6 +11,7 @@ int batteria(const gsl_vector *, void *,gsl_vector *);
 double complex R_RCPE(double ,double , double , double , double );
 double complex R_RC_RC(double , double ,double ,double ,double ,double );
 double complex CPE_W(double , double , double , double , double , double , double , double , double , double );
+double complex fouquet(double, double, double, double, double, double, double);
 double check_limit(gsl_vector *);
 
 
@@ -18,4 +19,5 @@ extern int type;
 extern size_t p;
 extern double lower_bounds[9];
 extern double upper_bounds[9];
+extern int fuel_cell;
 #endif // BATTERY_EQUATION_H_INCLUDED
