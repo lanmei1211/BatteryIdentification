@@ -26,7 +26,7 @@ int batteria(const gsl_vector * x, void *data, gsl_vector * f)
             battery_impedance = fouquet(w,P(0),P(1),P(2),P(3),P(4),P(5));
         }
 
-        if(i<N/2){
+        if(i<n/2){
             double re = creal(battery_impedance);
             Yi = re;
         }else{
@@ -65,6 +65,9 @@ double complex CPE_W(double w, double L, double Rs, double Q1, double n1, double
 
 }
 
-double complex fouquet(double w, double a, double b, double c, double d, double e, double f){
-    return 0;
+double complex fouquet(double w, double Rs, double Q1, double n1, double RP1, double RD, double tauD){
+
+   //Cpe = (1/(Q1*cpow(I*w,n1)));
+   //Zdelta = (RD*ctanh(csqrt(tauD*I*w)) /csqrt(tauD*I*w));
+    return Rs + 1/((1/(1/(Q1*cpow(I*w,n1))))+ 1/(RP1+(RD*ctanh(csqrt(tauD*I*w)) /csqrt(tauD*I*w))));
 }

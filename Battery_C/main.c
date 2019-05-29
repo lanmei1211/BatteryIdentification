@@ -4,9 +4,13 @@
 #include "global.h"
 #include "filter.h"
 
-double w_arr[N/2];
-double Z_r_arr[N/2];
-double Z_i_arr[N/2];
+int N;
+//double w_arr[N/2];
+//double Z_r_arr[N/2];
+//double Z_i_arr[N/2];
+double *w_arr;
+double *Z_r_arr;
+double *Z_i_arr;
 double chisq, chisq0;
 int status, info;
 int i;
@@ -19,7 +23,7 @@ gsl_multifit_nlinear_parameters fdf_params;
 gsl_vector *f;
 gsl_matrix *J;
 gsl_matrix *covar;
-double t[N], y[N], weights[N];
+double *t, *y, *weights;
 Data d;
 
 gsl_vector_view x;
@@ -38,15 +42,20 @@ void leggiFile(double *dati, char* nomefile){
     //Funzione che legge da file binario dei dati e li inserisce nel vettore passato come argomento
     FILE *fd;
 
-    int res;
-
     fd=fopen(nomefile, "rb");
     if( fd ==NULL ) {
         perror("Errore in apertura del file");
         exit(1);
     }
 
-    res = fread(dati, sizeof(double), N/2, fd);
+    int elements =0;
+    dati = malloc(sizeof(double)*(elements+1));
+    while(fread(dati, sizeof(double), 1, fd) > 0){
+        printf("leggi %d\n",elements);
+        elements++;
+        dati = malloc(sizeof(double)*(elements+1));
+    }
+    N=elements*2;
     fclose(fd);
 }
 
@@ -151,7 +160,14 @@ void initialize_params(){
 }
 void acquire_data(){
     read_files();
+    w_arr = malloc(sizeof(double)*N/2);
+    Z_r_arr = malloc(sizeof(double)*N/2);
+    Z_i_arr = malloc(sizeof(double)*N/2);
+    t = malloc(sizeof(double)*N);
+    y = malloc(sizeof(double)*N);
+    weights = malloc(sizeof(double)*N);
     /* this is the data to be fitted */
+    printf("N vale %d\n",N);
     for (i = 0; i < N; i++)
     {
 
@@ -372,6 +388,12 @@ void print_results(){
 }
 
 void close(){
+    free(w_arr);
+    free(Z_r_arr);
+    free(Z_i_arr);
+    free(t);
+    free(y);
+    free(weights);
     gsl_multifit_nlinear_free (w);
     gsl_matrix_free (covar);
     gsl_rng_free (r);
