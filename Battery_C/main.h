@@ -23,7 +23,7 @@ const double xtol = 1e-6;
 const double gtol = 1e-6;
 const double ftol = 1e-6;
 
-void leggiFile(double*, char* );
+void leggiFile(double**, char* );
 void write_files(double *,char* ,int n);
 void read_files();
 void callback(const size_t , void *,const gsl_multifit_nlinear_workspace *);

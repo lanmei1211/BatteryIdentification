@@ -37,8 +37,11 @@ double upper_bounds[9];
 
 int fuel_cell = 0;
 
+int increase_size(double** ptr,int elements){
+    *ptr =realloc(*ptr, elements*sizeof(double));
+}
 
-void leggiFile(double *dati, char* nomefile){
+void leggiFile(double **dati, char* nomefile){
     //Funzione che legge da file binario dei dati e li inserisce nel vettore passato come argomento
     FILE *fd;
 
@@ -49,11 +52,13 @@ void leggiFile(double *dati, char* nomefile){
     }
 
     int elements =0;
-    dati = malloc(sizeof(double)*(elements+1));
-    while(fread(dati, sizeof(double), 1, fd) > 0){
-        printf("leggi %d\n",elements);
+    *dati = malloc(sizeof(double)*(elements+1));
+    while(fread((*dati)+elements, sizeof(double), 1, fd) > 0){
+        printf("leggi %d, valore: %lf\n",elements,(*dati)[elements]);
         elements++;
-        dati = malloc(sizeof(double)*(elements+1));
+        increase_size(dati, elements+1);
+
+
     }
     N=elements*2;
     fclose(fd);
@@ -84,14 +89,14 @@ void write_files(double *dati,char* nomefile,int n){
 
 void read_files(){
 
-    int contatore;
-    leggiFile(w_arr,"w_bat1.bin");
-    for(contatore = 0; contatore < N/2; contatore++){
+    leggiFile(&w_arr,"w_bat1.bin");
+    //printf("ok: %lf \n",w_arr[199]);
+    for(int contatore = 0; contatore < N/2; contatore++){
         //precisione matlab
-        printf("%d: %.15e \n",contatore,w_arr[contatore]);
+        //printf("%d - %lf \n",contatore,w_arr[contatore]);
     }
-    leggiFile(Z_r_arr,"real_bat1.bin");
-    leggiFile(Z_i_arr,"imag_bat1.bin");
+    leggiFile(&Z_r_arr,"real_bat1.bin");
+    leggiFile(&Z_i_arr,"imag_bat1.bin");
 }
 
 void callback(const size_t iter, void *params, const gsl_multifit_nlinear_workspace *w)
@@ -160,9 +165,6 @@ void initialize_params(){
 }
 void acquire_data(){
     read_files();
-    w_arr = malloc(sizeof(double)*N/2);
-    Z_r_arr = malloc(sizeof(double)*N/2);
-    Z_i_arr = malloc(sizeof(double)*N/2);
     t = malloc(sizeof(double)*N);
     y = malloc(sizeof(double)*N);
     weights = malloc(sizeof(double)*N);
@@ -404,7 +406,57 @@ int main (int argc, char **argv)
     if(argc ==2){
         fuel_cell=1;
     }
-    //test_write();
+    //test_wr();
     identification();
     return 0;
 }
+/*
+int test_wr(){
+    //scrivi
+    double data[5] = {1.01, 2.02, 3.03, 4.04, 5.05};
+    char *nomefile = "test.bin";
+    remove(nomefile);
+
+    FILE *fd;
+    int res;
+    fd = fopen(nomefile,"w");
+    if( fd ==NULL ) {
+        perror("Errore in apertura del file");
+        exit(1);
+    }
+
+
+    for(int k = 0;k<5;k++){
+            //fprintf(fd,"%.15e ",dati[k]);
+            fwrite(&data[k],sizeof(double),1,fd);
+            printf("Writing %lf\n", data[k]);
+        }
+    fclose(fd);
+
+    //leggi
+    double *data2;
+    fd=fopen(nomefile, "rb");
+    if( fd ==NULL ) {
+        perror("Errore in apertura del file");
+        exit(1);
+    }
+
+    int elements =0;
+    data2 = malloc(sizeof(double)*(elements+1));
+    while(fread(data2+elements, sizeof(double), 1, fd) >0){
+        printf("leggi %d, valore: %lf",elements,data2[elements]);
+
+        //data2 = malloc(sizeof(int)*(elements+1));
+        double *tmp = realloc(data2, sizeof(double)*(elements+1));
+        if (tmp != NULL) {
+           data2 = tmp;
+        } else {
+           printf("ERRORE nella lettura\n\n");
+           return 0;
+        }
+        printf(" re: %lf || %lf\n",data2[elements],tmp[elements]);
+        elements++;
+    }
+    fclose(fd);
+}
+*/
