@@ -65,5 +65,5 @@ double complex CPE_W(double w, double L, double Rs, double Q1, double n1, double
 }
 
 double complex fouquet(double w, double Rs, double Q1, double n1, double RP1, double RD, double tauD){
-    return Rs + 1/((1/(1/(Q1*cpow(I*w,n1))))+ 1/(RP1+(RD*ctanh(csqrt(tauD*I*w)) /csqrt(tauD*I*w))));
+    return Rs + 1/((Q1*cpow(I*w,n1))+ 1/(RP1+(RD*ctanh(csqrt(tauD*I*w)) /csqrt(tauD*I*w))));
 }

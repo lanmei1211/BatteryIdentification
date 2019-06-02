@@ -231,7 +231,7 @@ void acquire_data(){
         }
 
 
-        //printf ("data: %g %g\n", t[i], y[i]);
+        printf ("data: %g %g\n", t[i], y[i]);
     };
 
 }
@@ -327,25 +327,25 @@ void classify(){
         p=6;
 
         x_init[0] = 0.005;
-        x_init[1] = 1;
-        x_init[2] = 0.7;
+        x_init[1] = 1.7;
+        x_init[2] = 0.8;
         x_init[3] = 0.01;
         x_init[4] = 0.05;
-        x_init[5] = 0.01;
+        x_init[5] = 0.4;
 
         lower_bounds[0] = 0.0;
         lower_bounds[1] = 0.5;
-        lower_bounds[2] = 0.5;
+        lower_bounds[2] = 0.4;
         lower_bounds[3] = 0.0;
         lower_bounds[4] = 0.0;
         lower_bounds[5] = 0.0;
 
-        upper_bounds[0] = 1.0;
-        upper_bounds[1] = 2.0;
-        upper_bounds[2] = 1.0;
-        upper_bounds[3] = 1.0;
-        upper_bounds[4] = 1.0;
-        upper_bounds[5] = 0.5;
+        upper_bounds[0] = 0.1;
+        upper_bounds[1] = 3.0;
+        upper_bounds[2] = 1.2;
+        upper_bounds[3] = 0.1;
+        upper_bounds[4] = 0.2;
+        upper_bounds[5] = 0.8;
 
     }
 
