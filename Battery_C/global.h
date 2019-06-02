@@ -7,7 +7,6 @@
 #define FILTER_AMOUNT 6
 #define OFFSET 50
 
-//#define N 400
 typedef struct data
 {
     size_t n;

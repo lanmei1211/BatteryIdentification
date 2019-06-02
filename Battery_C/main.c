@@ -1,9 +1,18 @@
+/**
+* Main.c
+*/
+
 #include "main.h"
 #include "classifier.h"
 #include "battery_equation.h"
 #include "global.h"
 #include "filter.h"
 
+/**
+* numero di punti rilevato
+* rappresenta il numero di frequenze disponibili
+* viene inizializzato dinamicamente analizzando il file dei dati
+*/
 int N;
 
 double *w_arr;
@@ -27,19 +36,38 @@ Data d;
 gsl_vector_view x;
 gsl_rng * r;
 
+/**
+* tipo di modello da utilizzare
+*/
 int type;
+/**
+* numero di parametri
+*/
 size_t p;
 double x_init[9];
 double lower_bounds[9];
 double upper_bounds[9];
 
+/**
+* indica se si sta analizzando una fuel cell o una batteria a litio
+*/
 int fuel_cell = 0;
 
+/**
+* aumenta dimensione dell'area di memoria dedicata a un puntatore
+* @param ptr puntatore
+* @param elements valori da salvare
+*/
 int increase_size(double** ptr,int elements){
     *ptr =realloc(*ptr, elements*sizeof(double));
 }
 
-void leggiFile(double **dati, char* nomefile){
+/**
+* leggi i dati da un file
+* @param dati variabile in cui salvare i dati
+* @param nomefile nome del file
+*/
+void read_single_file(double **dati, char* nomefile){
     FILE *fd;
 
     fd=fopen(nomefile, "rb");
@@ -60,6 +88,12 @@ void leggiFile(double **dati, char* nomefile){
     fclose(fd);
 }
 
+/**
+* scrivi il risultato dell'identificazione su file binario
+* @param dati valori da scrivere
+* @param nomefile nome del file
+* @param n numero di parametri
+*/
 void write_files(double *dati,char* nomefile,int n){
 
     FILE *fd;
@@ -81,14 +115,20 @@ void write_files(double *dati,char* nomefile,int n){
 
 }
 
-
+/**
+* leggi i file contenenti i dati
+* @see read_single_file()
+*/
 void read_files(){
 
-    leggiFile(&w_arr,"w_bat1.bin");
-    leggiFile(&Z_r_arr,"real_bat1.bin");
-    leggiFile(&Z_i_arr,"imag_bat1.bin");
+    read_single_file(&w_arr,"w_bat1.bin");
+    read_single_file(&Z_r_arr,"real_bat1.bin");
+    read_single_file(&Z_i_arr,"imag_bat1.bin");
 }
 
+/**
+* funzione richiamata dopo una iterazione del curve fitter
+*/
 void callback(const size_t iter, void *params, const gsl_multifit_nlinear_workspace *w)
 {
     gsl_vector *f = gsl_multifit_nlinear_residual(w);
@@ -115,7 +155,15 @@ void callback(const size_t iter, void *params, const gsl_multifit_nlinear_worksp
     */
 }
 
-
+/**
+* identifica un insieme di dati di una batteria
+* @see acquire_data()
+* @see classify()
+* @see initialize_params()
+* @see solve_system()
+* @see print_result()
+* @see close()
+*/
 void identification(){
 
     printf("Acquire data\n\n");
@@ -132,6 +180,10 @@ void identification(){
     close();
 
 }
+
+/**
+* inizializza l'identificatore
+*/
 void initialize_params(){
     T = gsl_multifit_nlinear_trust;
     fdf_params = gsl_multifit_nlinear_default_parameters();
@@ -153,6 +205,10 @@ void initialize_params(){
     fdf.params = &d;
 
 }
+/**
+* acquisisci i dati da file e inseriscili negli array utilizzati da gsl
+* @see read_files()
+*/
 void acquire_data(){
     read_files();
     t = malloc(sizeof(double)*N);
@@ -179,7 +235,12 @@ void acquire_data(){
     };
 
 }
-
+/**
+* classifica il tipo di curva, se i dati sono per una fuel cell, assegna direttamente i parametri,
+* altrimenti, filtra i dati e chiama il classificatore
+* @see filter()
+* @see classificatore()
+*/
 void classify(){
     if(fuel_cell == 0){
         double filtered_data[N/2];
@@ -290,7 +351,9 @@ void classify(){
 
 }
 
-
+/**
+* risolvi il sistema di identificazione parametrica
+*/
 void solve_system(){
 
     /* allocate workspace with default parameters */
@@ -318,6 +381,10 @@ void solve_system(){
 
 }
 
+/**
+* stampa risultati dell'identificazione, sia a video che su file 'res_bat1.dat'
+* @see write_files()
+*/
 void print_results(){
 
 #define FIT(i) gsl_vector_get(w->x, i)
@@ -340,19 +407,19 @@ void print_results(){
         double c = GSL_MAX_DBL(1, sqrt(chisq / dof));
 
         fprintf(stderr, "chisq/dof = %g\n", chisq / dof);
-
+        char file_name[] = "res_bat1.dat";
         if (type==1){
             double dati[4] = {FIT(0),FIT(1),FIT(2),FIT(3)};
-            write_files(dati,"res_bat1.dat",p);
+            write_files(dati,file_name,p);
         }else if(type==2){
             double dati[5] = {FIT(0),FIT(1),FIT(2),FIT(3),FIT(4)};
-            write_files(dati,"res_bat1.dat",p);
+            write_files(dati,file_name,p);
         } else if(type == 3){
             double dati[9] = {FIT(0),FIT(1),FIT(2),FIT(3),FIT(4),FIT(5),FIT(6),FIT(7),FIT(8)};
-            write_files(dati,"res_bat1.dat",p);
+            write_files(dati,file_name,p);
         } else {
             double dati[6] = {FIT(0),FIT(1),FIT(2),FIT(3),FIT(4),FIT(5)};
-            write_files(dati,"res_bat1.dat",p);
+            write_files(dati,file_name,p);
         }
 
 
@@ -380,6 +447,9 @@ void print_results(){
 
 }
 
+/**
+* libera lo spazio allocato per l'identificazione
+*/
 void close(){
     free(w_arr);
     free(Z_r_arr);
@@ -391,6 +461,14 @@ void close(){
     gsl_matrix_free (covar);
     gsl_rng_free (r);
 }
+/**
+* main del programma di identificazione parametri
+* deve avere due argomenti, di cui il secondo deve essere 1 per fuel cell e 0 per batterie a litio
+* @param argc numero di argomenti
+* @param argv argomenti
+* @see identification();
+* @return 0
+*/
 
 int main (int argc, char **argv)
 {
