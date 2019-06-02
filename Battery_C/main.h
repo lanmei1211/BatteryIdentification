@@ -13,11 +13,6 @@
 
 
 
-/*
-const double xtol = 1e-12;
-const double gtol = pow(GSL_DBL_EPSILON,1/3);
-const double ftol = 0.0;
-*/
 
 const double xtol = 1e-6;
 const double gtol = 1e-6;

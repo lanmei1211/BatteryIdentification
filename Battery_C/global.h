@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#define WINDOW 2
+#define WINDOW 15
 #define FILTER_AMOUNT 6
 #define OFFSET 50
 

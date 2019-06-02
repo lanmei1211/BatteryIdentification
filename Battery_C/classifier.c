@@ -30,7 +30,7 @@ int test(){
     test_is_increasing();
     test_is_decreasing();
     test_compute();
-    //test_classificatore();
+
     return 0;
 
 }

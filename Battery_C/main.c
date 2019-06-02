@@ -5,9 +5,7 @@
 #include "filter.h"
 
 int N;
-//double w_arr[N/2];
-//double Z_r_arr[N/2];
-//double Z_i_arr[N/2];
+
 double *w_arr;
 double *Z_r_arr;
 double *Z_i_arr;
@@ -42,7 +40,6 @@ int increase_size(double** ptr,int elements){
 }
 
 void leggiFile(double **dati, char* nomefile){
-    //Funzione che legge da file binario dei dati e li inserisce nel vettore passato come argomento
     FILE *fd;
 
     fd=fopen(nomefile, "rb");
@@ -54,7 +51,6 @@ void leggiFile(double **dati, char* nomefile){
     int elements =0;
     *dati = malloc(sizeof(double)*(elements+1));
     while(fread((*dati)+elements, sizeof(double), 1, fd) > 0){
-        printf("leggi %d, valore: %lf\n",elements,(*dati)[elements]);
         elements++;
         increase_size(dati, elements+1);
 
@@ -77,7 +73,6 @@ void write_files(double *dati,char* nomefile,int n){
 
 
     for(k = 0;k<n;k++){
-            //fprintf(fd,"%.15e ",dati[k]);
             fwrite(&dati[k],sizeof(double),1,fd);
         }
 
@@ -90,11 +85,6 @@ void write_files(double *dati,char* nomefile,int n){
 void read_files(){
 
     leggiFile(&w_arr,"w_bat1.bin");
-    //printf("ok: %lf \n",w_arr[199]);
-    for(int contatore = 0; contatore < N/2; contatore++){
-        //precisione matlab
-        //printf("%d - %lf \n",contatore,w_arr[contatore]);
-    }
     leggiFile(&Z_r_arr,"real_bat1.bin");
     leggiFile(&Z_i_arr,"imag_bat1.bin");
 }
@@ -185,7 +175,7 @@ void acquire_data(){
         }
 
 
-        printf ("data: %g %g\n", t[i], y[i]);
+        //printf ("data: %g %g\n", t[i], y[i]);
     };
 
 }
@@ -207,15 +197,15 @@ void classify(){
         x_init[2] = 0.6;
         x_init[3] = 0.2;
 
-        lower_bounds[0] = 0.05;
-        lower_bounds[1] = 0.74;
+        lower_bounds[0] = 0.02;
+        lower_bounds[1] = 0.72;
         lower_bounds[2] = 0.48;
-        lower_bounds[3] = 0.08;
+        lower_bounds[3] = 0.02;
 
-        upper_bounds[0] = 0.15;
-        upper_bounds[1] = 0.80;
+        upper_bounds[0] = 0.22;
+        upper_bounds[1] = 0.82;
         upper_bounds[2] = 0.72;
-        upper_bounds[3] = 0.24;
+        upper_bounds[3] = 0.3;
 
     } else if (type == 2){
         p=5;
@@ -226,17 +216,17 @@ void classify(){
         x_init[3] = 5;
         x_init[4] = 1;
 
-        lower_bounds[0] = 0.1;
-        lower_bounds[1] = 1;
-        lower_bounds[2] = 0.2;
-        lower_bounds[3] = 5;
-        lower_bounds[4] = 1;
+        lower_bounds[0] = 0.07;
+        lower_bounds[1] = 0.8;
+        lower_bounds[2] = 0.15;
+        lower_bounds[3] = 4.7;
+        lower_bounds[4] = 0.9;
 
 
-        upper_bounds[0] = 0.2;
+        upper_bounds[0] = 0.25;
         upper_bounds[1] = 1.2;
         upper_bounds[2] = 0.24;
-        upper_bounds[3] = 5.1;
+        upper_bounds[3] = 5.3;
         upper_bounds[4] = 1.1;
 
 
@@ -273,28 +263,28 @@ void classify(){
         upper_bounds[7] = 1.0;
         upper_bounds[8] = 0.5;
     } else {
-        p=9;
+        p=6;
 
-        x_init[0] = 3e-6;
-        x_init[1] = 0.2;
-        x_init[2] = 0.04;
-        x_init[3] = 0.6;
-        x_init[4] = 0.4;
-        x_init[5] = 0.6;
+        x_init[0] = 0.005;
+        x_init[1] = 1;
+        x_init[2] = 0.7;
+        x_init[3] = 0.01;
+        x_init[4] = 0.05;
+        x_init[5] = 0.01;
 
-        lower_bounds[0] = 2e-6;
-        lower_bounds[1] = 0.0;
-        lower_bounds[2] = 0.0;
-        lower_bounds[3] = 0.5;
+        lower_bounds[0] = 0.0;
+        lower_bounds[1] = 0.5;
+        lower_bounds[2] = 0.5;
+        lower_bounds[3] = 0.0;
         lower_bounds[4] = 0.0;
         lower_bounds[5] = 0.0;
 
-        upper_bounds[0] = 8e-6;
-        upper_bounds[1] = 0.3;
-        upper_bounds[2] = 0.8;
+        upper_bounds[0] = 1.0;
+        upper_bounds[1] = 2.0;
+        upper_bounds[2] = 1.0;
         upper_bounds[3] = 1.0;
         upper_bounds[4] = 1.0;
-        upper_bounds[5] = 0.7;
+        upper_bounds[5] = 0.5;
 
     }
 
@@ -313,7 +303,8 @@ void solve_system(){
     f = gsl_multifit_nlinear_residual(w);
     gsl_blas_ddot(f, f, &chisq0);
 
-    /* solve the system with a maximum of 100 iterations */
+
+    /* solve the system with a maximum of 5000 iterations */
     status = gsl_multifit_nlinear_driver(5000, xtol, gtol, ftol,
                                          callback, NULL, &info, w);
 
@@ -403,60 +394,19 @@ void close(){
 
 int main (int argc, char **argv)
 {
-    if(argc ==2){
-        fuel_cell=1;
+    if(argc == 2){
+
+        if(strcmp(argv[1],"1") == 0){
+            fuel_cell = 1;
+        } else if(strcmp(argv[1],"0") == 0){
+            fuel_cell = 0;
+        } else {
+            printf("Errore, selezionare il tipo di batteria:\n1 per Fuel cell, 0 per batteria al litio\n");
+            return 0;
+        }
+        identification();
+    } else {
+        printf("Errore, selezionare il tipo di batteria:\n1 per Fuel cell, 0 per batteria al litio\n");
     }
-    //test_wr();
-    identification();
     return 0;
 }
-/*
-int test_wr(){
-    //scrivi
-    double data[5] = {1.01, 2.02, 3.03, 4.04, 5.05};
-    char *nomefile = "test.bin";
-    remove(nomefile);
-
-    FILE *fd;
-    int res;
-    fd = fopen(nomefile,"w");
-    if( fd ==NULL ) {
-        perror("Errore in apertura del file");
-        exit(1);
-    }
-
-
-    for(int k = 0;k<5;k++){
-            //fprintf(fd,"%.15e ",dati[k]);
-            fwrite(&data[k],sizeof(double),1,fd);
-            printf("Writing %lf\n", data[k]);
-        }
-    fclose(fd);
-
-    //leggi
-    double *data2;
-    fd=fopen(nomefile, "rb");
-    if( fd ==NULL ) {
-        perror("Errore in apertura del file");
-        exit(1);
-    }
-
-    int elements =0;
-    data2 = malloc(sizeof(double)*(elements+1));
-    while(fread(data2+elements, sizeof(double), 1, fd) >0){
-        printf("leggi %d, valore: %lf",elements,data2[elements]);
-
-        //data2 = malloc(sizeof(int)*(elements+1));
-        double *tmp = realloc(data2, sizeof(double)*(elements+1));
-        if (tmp != NULL) {
-           data2 = tmp;
-        } else {
-           printf("ERRORE nella lettura\n\n");
-           return 0;
-        }
-        printf(" re: %lf || %lf\n",data2[elements],tmp[elements]);
-        elements++;
-    }
-    fclose(fd);
-}
-*/
