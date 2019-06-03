@@ -1,5 +1,5 @@
 #include "battery_equation.h"
-#include "global.h"
+
 
 int batteria(const gsl_vector * x, void *data, gsl_vector * f)
 {
@@ -16,11 +16,11 @@ int batteria(const gsl_vector * x, void *data, gsl_vector * f)
 
 
         double complex battery_impedance;
-        if(type == 1){
+        if(type == ONE_CURVE){
             battery_impedance = R_RCPE(w,P(0),P(1),P(2),P(3));
-        } else if (type == 2){
+        } else if (type == TWO_CURVES){
             battery_impedance = R_RC_RC(w,P(0),P(1),P(2),P(3),P(4));
-        } else if (type == 3){
+        } else if (type == TAIL){
             battery_impedance = CPE_W(w,P(0),P(1),P(2),P(3),P(4),P(5),P(6),P(7),P(8));
         } else {
             battery_impedance = fouquet(w,P(0),P(1),P(2),P(3),P(4),P(5));

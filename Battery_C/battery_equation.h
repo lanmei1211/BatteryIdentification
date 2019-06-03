@@ -3,6 +3,7 @@
 
 #include <gsl/gsl_vector.h>
 #include <complex.h>
+#include "global.h"
 
 #define P(i) gsl_vector_get(x,i)
 #define MAXW 10

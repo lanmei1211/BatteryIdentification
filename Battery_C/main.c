@@ -247,10 +247,10 @@ void classify(){
         filter(Z_i_arr,filtered_data,N/2);
         type = classificatore(filtered_data+OFFSET,N/2-OFFSET);
     } else {
-        type = 4;
+        type = FUEL_CELL;
     }
     printf("Type is: %d\n", type);
-    if (type == 1){
+    if (type == ONE_CURVE){
         p=4;
 
         x_init[0] = 0.1;
@@ -268,7 +268,7 @@ void classify(){
         upper_bounds[2] = 0.72;
         upper_bounds[3] = 0.3;
 
-    } else if (type == 2){
+    } else if (type == TWO_CURVES){
         p=5;
 
         x_init[0] = 0.15;
@@ -291,7 +291,7 @@ void classify(){
         upper_bounds[4] = 1.1;
 
 
-    } else if (type == 3){
+    } else if (type == TAIL){
         p=9;
 
         x_init[0] = 3e-6;
@@ -408,13 +408,13 @@ void print_results(){
 
         fprintf(stderr, "chisq/dof = %g\n", chisq / dof);
         char file_name[] = "res_bat1.dat";
-        if (type==1){
+        if (type== ONE_CURVE){
             double dati[4] = {FIT(0),FIT(1),FIT(2),FIT(3)};
             write_files(dati,file_name,p);
-        }else if(type==2){
+        }else if(type== TWO_CURVES){
             double dati[5] = {FIT(0),FIT(1),FIT(2),FIT(3),FIT(4)};
             write_files(dati,file_name,p);
-        } else if(type == 3){
+        } else if(type == TAIL){
             double dati[9] = {FIT(0),FIT(1),FIT(2),FIT(3),FIT(4),FIT(5),FIT(6),FIT(7),FIT(8)};
             write_files(dati,file_name,p);
         } else {
@@ -428,12 +428,12 @@ void print_results(){
         fprintf (stderr, "Param 2     = %.15e \n", FIT(1));
         fprintf (stderr, "Param 3      = %.15e \n", FIT(2));
         fprintf (stderr, "Param 4      = %.15e \n", FIT(3));
-        if(type!=1){
+        if(type!=ONE_CURVE){
             fprintf (stderr, "Param 5     = %.15e \n", FIT(4));
-            if(type==4){
+            if(type==FUEL_CELL){
                 fprintf (stderr, "Param 6     = %.15e \n", FIT(5));
             }
-            if(type==3){
+            if(type==TAIL){
                 fprintf (stderr, "Param 6     = %.15e \n", FIT(5));
                 fprintf (stderr, "Param 7      = %.15e \n", FIT(6));
                 fprintf (stderr, "Param 8      = %.15e \n", FIT(7));

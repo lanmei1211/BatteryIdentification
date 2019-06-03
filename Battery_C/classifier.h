@@ -1,7 +1,7 @@
 #ifndef CLASSIFIER_H_INCLUDED
 #define CLASSIFIER_H_INCLUDED
 
-
+#include "global.h"
 #define size 6
 #define tests 9
 

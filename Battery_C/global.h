@@ -7,6 +7,11 @@
 #define FILTER_AMOUNT 6
 #define OFFSET 50
 
+#define ONE_CURVE 1
+#define TWO_CURVES 2
+#define TAIL 3
+#define FUEL_CELL 4
+
 typedef struct data
 {
     size_t n;
