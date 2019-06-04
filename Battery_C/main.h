@@ -10,6 +10,8 @@
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_multifit_nlinear.h>
 #include <gsl/gsl_sf_lambert.h>
+#define _POSIX_C_SOURCE 199309L
+#include <sys/time.h>
 
 
 

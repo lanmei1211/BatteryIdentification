@@ -15,6 +15,8 @@
 */
 int N;
 
+struct timespec start, end;
+
 double *w_arr;
 double *Z_r_arr;
 double *Z_i_arr;
@@ -52,6 +54,13 @@ double upper_bounds[9];
 * indica se si sta analizzando una fuel cell o una batteria a litio
 */
 int fuel_cell = 0;
+
+
+uint64_t elapsed_time(){
+    uint64_t delta_us = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
+    return delta_us;
+}
+
 
 /**
 * aumenta dimensione dell'area di memoria dedicata a un puntatore
@@ -138,21 +147,11 @@ void callback(const size_t iter, void *params, const gsl_multifit_nlinear_worksp
     /* compute reciprocal condition number of J(x) */
     gsl_multifit_nlinear_rcond(&rcond, w);
 
-    /*
-    fprintf(stderr, "iter %2zu: L = %.e, Rm = %.e, Q1 = %.e, a1 = %.e, Rp1 = %.e, Q2 = %.e,a2 = %.e, Rp2 = %.e, Aw = %.e, cond(J) = %8.4f, |f(x)| = %.4f\n",
-            iter,
-            gsl_vector_get(x, 0),
-            gsl_vector_get(x, 1),
-            gsl_vector_get(x, 2),
-            gsl_vector_get(x, 3),
-            gsl_vector_get(x, 4),
-            gsl_vector_get(x, 5),
-            gsl_vector_get(x, 6),
-            gsl_vector_get(x, 7),
-            gsl_vector_get(x, 8),
-            1.0 / rcond,
-            gsl_blas_dnrm2(f));
-    */
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    uint64_t elapsed = elapsed_time();
+    printf("Iteration number: %2zu, Elapsed time: %lld\n",iter, elapsed);
+    clock_gettime(CLOCK_MONOTONIC, &start);
+
 }
 
 /**
@@ -366,7 +365,7 @@ void solve_system(){
     f = gsl_multifit_nlinear_residual(w);
     gsl_blas_ddot(f, f, &chisq0);
 
-
+    clock_gettime(CLOCK_MONOTONIC, &start);
     /* solve the system with a maximum of 5000 iterations */
     status = gsl_multifit_nlinear_driver(5000, xtol, gtol, ftol,
                                          callback, NULL, &info, w);
