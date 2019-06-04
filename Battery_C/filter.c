@@ -2,20 +2,22 @@
 #include "global.h"
 
 void filter(double * data, double * filtered_data,int n){
+    printf("Entra filtro0\n");
     flip(data,filtered_data,n);
 
-    for(int i; i<FILTER_AMOUNT;i++){
+    for(int i=0; i<FILTER_AMOUNT;i++){
         average(filtered_data,filtered_data,n);
     }
 
 }
 void flip(double * data, double * flipped, int n){
     for(int i = 0;i<n;i++){
-        flipped[i] = data[n-i-1];
+        flipped[i] = -data[n-i-1];
     }
     return flipped;
 }
 void average(double * data, double *av, int n){
+    printf("Entra filtro\n");
     for(int i=0;i<n;i++){
         int j=i;
         int k=0;

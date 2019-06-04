@@ -180,14 +180,16 @@ int compute(double *data, int n){
 int classificatore(double *data, int n){
     int k;
     for(k=0;k<n-4;k++ ){
+        printf("data class: %.04f\n", data[k]);
         if(data[k]>data[k+1]){
             k++;
             break;
         }
         data[k] = (data[k+4]-data[k])/5;
     }
-
+    printf("Class - k: %d, n: %d\n", k,n);
     for(int j=k+1;j<n;j++){
+        printf("data class: %.04f\n", data[j]);
         if(data[j]>data[j-1])
             return TAIL;
     }
