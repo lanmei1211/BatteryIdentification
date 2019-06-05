@@ -3,9 +3,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#define WINDOW 15
-#define FILTER_AMOUNT 6
-#define OFFSET 50
+#define WINDOW 3
+#define FILTER_AMOUNT 2
+#define OFFSET 100
+#define TOP_OFFSET 0
 
 #define ONE_CURVE 1
 #define TWO_CURVES 2

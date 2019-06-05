@@ -2,7 +2,6 @@
 #include "global.h"
 
 void filter(double * data, double * filtered_data,int n){
-    printf("Entra filtro0\n");
     flip(data,filtered_data,n);
 
     for(int i=0; i<FILTER_AMOUNT;i++){
@@ -17,7 +16,6 @@ void flip(double * data, double * flipped, int n){
     return flipped;
 }
 void average(double * data, double *av, int n){
-    printf("Entra filtro\n");
     for(int i=0;i<n;i++){
         int j=i;
         int k=0;
@@ -28,7 +26,7 @@ void average(double * data, double *av, int n){
             k++;
         }
         av[i]=value/k;
-        printf("i=%d, orig=%lf, value=%lf, av=%lf,window=%d\n",i,data[i],value,av[i],(k));
+        //printf("i=%d, orig=%lf, value=%lf, av=%lf,window=%d\n",i,data[i],value,av[i],(k));
     }
 }
 

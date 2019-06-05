@@ -38,6 +38,8 @@ Data d;
 gsl_vector_view x;
 gsl_rng * r;
 
+char base_path[] = "data/modelloFuelZdot1/";
+
 /**
 * tipo di modello da utilizzare
 */
@@ -69,6 +71,7 @@ uint64_t elapsed_time(){
 */
 int increase_size(double** ptr,int elements){
     *ptr =realloc(*ptr, elements*sizeof(double));
+    return 0;
 }
 
 /**
@@ -77,9 +80,12 @@ int increase_size(double** ptr,int elements){
 * @param nomefile nome del file
 */
 void read_single_file(double **dati, char* nomefile){
+    char *path = malloc(strlen(base_path) + strlen(nomefile)+1);
+    strcpy(path,base_path);
+    strcat(path,nomefile);
     FILE *fd;
 
-    fd=fopen(nomefile, "rb");
+    fd=fopen(path, "rb");
     if( fd ==NULL ) {
         perror("Errore in apertura del file");
         exit(1);
@@ -95,6 +101,7 @@ void read_single_file(double **dati, char* nomefile){
     }
     N=elements*2;
     fclose(fd);
+    free(path);
 }
 
 /**
@@ -104,11 +111,13 @@ void read_single_file(double **dati, char* nomefile){
 * @param n numero di parametri
 */
 void write_files(double *dati,char* nomefile,int n){
+    char *path = malloc(strlen(base_path) + strlen(nomefile)+1);
+    strcpy(path,base_path);
+    strcat(path,nomefile);
 
     FILE *fd;
-    int res;
     int k ;
-    fd = fopen(nomefile,"w");
+    fd = fopen(path,"w");
     if( fd ==NULL ) {
         perror("Errore in apertura del file");
         exit(1);
@@ -121,6 +130,7 @@ void write_files(double *dati,char* nomefile,int n){
 
 
     fclose(fd);
+    free(path);
 
 }
 
@@ -130,9 +140,9 @@ void write_files(double *dati,char* nomefile,int n){
 */
 void read_files(){
 
-    read_single_file(&w_arr,"w_bat1.bin");
-    read_single_file(&Z_r_arr,"real_bat1.bin");
-    read_single_file(&Z_i_arr,"imag_bat1.bin");
+    read_single_file(&w_arr,"w.bin");
+    read_single_file(&Z_r_arr,"real.bin");
+    read_single_file(&Z_i_arr,"imag.bin");
 }
 
 /**
@@ -149,7 +159,7 @@ void callback(const size_t iter, void *params, const gsl_multifit_nlinear_worksp
 
     clock_gettime(CLOCK_MONOTONIC, &end);
     uint64_t elapsed = elapsed_time();
-    printf("Iteration number: %2zu, Elapsed time: %lld\n",iter, elapsed);
+    printf("Iteration number: %2zu, Elapsed time: %lu\n",iter, elapsed);
     clock_gettime(CLOCK_MONOTONIC, &start);
 
 }
@@ -230,7 +240,7 @@ void acquire_data(){
         }
 
 
-        printf ("data: %g %g\n", t[i], y[i]);
+        printf ("data %d: %g %g\n",i, t[i], y[i]);
     };
 
 }
@@ -252,99 +262,126 @@ void classify(){
     if (type == ONE_CURVE){
         p=4;
 
-        x_init[0] = 0.1;
-        x_init[1] = 0.77;
-        x_init[2] = 0.6;
-        x_init[3] = 0.2;
+        x_init[0] = 0.085;
+        x_init[1] = 0.72;
+        x_init[2] = 0.5;
+        x_init[3] = 0.13;
 
-        lower_bounds[0] = 0.02;
-        lower_bounds[1] = 0.72;
-        lower_bounds[2] = 0.48;
+        lower_bounds[0] = 0.07;
+        lower_bounds[1] = 0.60;
+        lower_bounds[2] = 0.45;
         lower_bounds[3] = 0.02;
 
-        upper_bounds[0] = 0.22;
-        upper_bounds[1] = 0.82;
-        upper_bounds[2] = 0.72;
+        upper_bounds[0] = 0.15;
+        upper_bounds[1] = 0.90;
+        upper_bounds[2] = 0.80;
         upper_bounds[3] = 0.3;
 
     } else if (type == TWO_CURVES){
         p=5;
 
-        x_init[0] = 0.15;
-        x_init[1] = 1;
-        x_init[2] = 0.2;
-        x_init[3] = 5;
-        x_init[4] = 1;
+        x_init[0] = 0.085;
+        x_init[1] = 0.72;
+        x_init[2] = 0.5;
+        x_init[3] = 4.20;
+        x_init[4] = 1.1;
 
         lower_bounds[0] = 0.07;
-        lower_bounds[1] = 0.8;
-        lower_bounds[2] = 0.15;
-        lower_bounds[3] = 4.7;
+        lower_bounds[1] = 0.60;
+        lower_bounds[2] = 0.1;
+        lower_bounds[3] = 3.80;
         lower_bounds[4] = 0.9;
 
 
-        upper_bounds[0] = 0.25;
-        upper_bounds[1] = 1.2;
-        upper_bounds[2] = 0.24;
-        upper_bounds[3] = 5.3;
-        upper_bounds[4] = 1.1;
+        upper_bounds[0] = 0.15;
+        upper_bounds[1] = 1.20;
+        upper_bounds[2] = 0.70;
+        upper_bounds[3] = 6.20;
+        upper_bounds[4] = 1.2;
 
 
     } else if (type == TAIL){
         p=9;
 
-        x_init[0] = 3e-6;
-        x_init[1] = 0.2;
-        x_init[2] = 0.04;
-        x_init[3] = 0.6;
-        x_init[4] = 0.4;
-        x_init[5] = 0.6;
+        x_init[0] = 4e-6;
+        x_init[1] = 0.05;
+        x_init[2] = 0.025;
+        x_init[3] = 0.68;
+        x_init[4] = 0.43;
+        x_init[5] = 0.3;
         x_init[6] = 0.8;
-        x_init[7] = 0.7;
+        x_init[7] = 0.6;
         x_init[8] = 0.22;
 
-        lower_bounds[0] = 2e-6;
-        lower_bounds[1] = 0.0;
+        lower_bounds[0] = 3e-6;
+        lower_bounds[1] = 0.02;
         lower_bounds[2] = 0.0;
         lower_bounds[3] = 0.5;
-        lower_bounds[4] = 0.0;
-        lower_bounds[5] = 0.0;
+        lower_bounds[4] = 0.2;
+        lower_bounds[5] = 0.1;
         lower_bounds[6] = 0.5;
-        lower_bounds[7] = 0.0;
-        lower_bounds[8] = 0.0;
+        lower_bounds[7] = 0.3;
+        lower_bounds[8] = 0.1;
 
-        upper_bounds[0] = 8e-6;
-        upper_bounds[1] = 0.3;
-        upper_bounds[2] = 0.8;
-        upper_bounds[3] = 1.0;
-        upper_bounds[4] = 1.0;
+        upper_bounds[0] = 6e-6;
+        upper_bounds[1] = 0.07;
+        upper_bounds[2] = 0.08;
+        upper_bounds[3] = 0.8;
+        upper_bounds[4] = 0.7;
         upper_bounds[5] = 0.7;
         upper_bounds[6] = 1.0;
-        upper_bounds[7] = 1.0;
+        upper_bounds[7] = 0.9;
         upper_bounds[8] = 0.5;
     } else {
         p=6;
+        //modelloFuelZdot1
 
-        x_init[0] = 0.005;
-        x_init[1] = 1.7;
-        x_init[2] = 0.8;
-        x_init[3] = 0.01;
-        x_init[4] = 0.05;
-        x_init[5] = 0.4;
+        x_init[0] = 0.006;
+        x_init[1] = 1.9;
+        x_init[2] = 0.85;
+        x_init[3] = 0.002;
+        x_init[4] = 0.02;
+        x_init[5] = 0.6;
 
-        lower_bounds[0] = 0.0;
-        lower_bounds[1] = 0.5;
-        lower_bounds[2] = 0.4;
-        lower_bounds[3] = 0.0;
-        lower_bounds[4] = 0.0;
-        lower_bounds[5] = 0.0;
+        lower_bounds[0] = 0.001;
+        lower_bounds[1] = 1.8;
+        lower_bounds[2] = 0.7;
+        lower_bounds[3] = 0.002;
+        lower_bounds[4] = 0.01;
+        lower_bounds[5] = 0.2;
 
-        upper_bounds[0] = 0.1;
-        upper_bounds[1] = 3.0;
+        upper_bounds[0] = 0.01;
+        upper_bounds[1] = 2.3;
         upper_bounds[2] = 1.2;
-        upper_bounds[3] = 0.1;
-        upper_bounds[4] = 0.2;
-        upper_bounds[5] = 0.8;
+        upper_bounds[3] = 0.01;
+        upper_bounds[4] = 0.3;
+        upper_bounds[5] = 0.7;
+
+
+        //Zcella15
+        /*
+        x_init[0] = 0.04;
+        x_init[1] = 0.25;
+        x_init[2] = 0.65;
+        x_init[3] = 0.08;
+        x_init[4] = 0.06;
+        x_init[5] = 0.2;
+
+        lower_bounds[0] = 0.02;
+        lower_bounds[1] = 0.1;
+        lower_bounds[2] = 0.4;
+        lower_bounds[3] = 0.02;
+        lower_bounds[4] = 0.005;
+        lower_bounds[5] = 0.07;
+
+        upper_bounds[0] = 0.07;
+        upper_bounds[1] = 0.5;
+        upper_bounds[2] = 0.9;
+        upper_bounds[3] = 0.4;
+        upper_bounds[4] = 0.09;
+        upper_bounds[5] = 0.4;
+        */
+
 
     }
 
@@ -403,10 +440,9 @@ void print_results(){
 
     {
         double dof = N - p;
-        double c = GSL_MAX_DBL(1, sqrt(chisq / dof));
 
         fprintf(stderr, "chisq/dof = %g\n", chisq / dof);
-        char file_name[] = "res_bat1.dat";
+        char file_name[] = "res_pc.dat";
         if (type== ONE_CURVE){
             double dati[4] = {FIT(0),FIT(1),FIT(2),FIT(3)};
             write_files(dati,file_name,p);
@@ -471,6 +507,8 @@ void close(){
 
 int main (int argc, char **argv)
 {
+
+
     if(argc == 2){
 
         if(strcmp(argv[1],"1") == 0){

@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_matrix.h>
@@ -10,9 +11,9 @@
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_multifit_nlinear.h>
 #include <gsl/gsl_sf_lambert.h>
-#define _POSIX_C_SOURCE 199309L
 #include <time.h>
 #include <stdint.h>
+
 
 
 
@@ -27,6 +28,7 @@ void callback(const size_t , void *,const gsl_multifit_nlinear_workspace *);
 void identification();
 void initialize_params();
 void acquire_data();
+void classify();
 void solve_system();
 void print_results();
 void close();
